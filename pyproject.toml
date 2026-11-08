@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mailproof"
+version = "1.0.0"
+description = "Zero-dependency, offline-first SPF/DKIM/DMARC auditor and DMARC rollout simulator"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "MailProof contributors" }]
+maintainers = [{ name = "gitstq" }]
+keywords = [
+  "spf", "dkim", "dmarc", "email", "security", "dns", "audit",
+  "cli", "offline-first", "zero-dependency", "sarif", "devsecops",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Communications :: Email",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "build>=1.0"]
+
+[project.scripts]
+mailproof = "mailproof.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/gitstq/MailProof"
+Repository = "https://github.com/gitstq/MailProof"
+Issues = "https://github.com/gitstq/MailProof/issues"
+Changelog = "https://github.com/gitstq/MailProof/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["mailproof*"]
+exclude = ["tests*", "examples*", "docs*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

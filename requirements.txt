@@ -1,0 +1,4 @@
+# MailProof has NO runtime dependencies.
+# Everything ships on the Python standard library (Python >= 3.8).
+#
+# Optional development tooling (tests/build) is listed in requirements-dev.txt.
