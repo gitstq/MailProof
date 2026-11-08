@@ -1,0 +1,95 @@
+# 在 GitHub Actions 中把 MailProof 当作 CI 门禁
+
+把下面文件保存为 `.github/workflows/mail-domain-audit.yml`。它会在每次 PR 和每周定时检查域名的邮件认证配置，把 SARIF 结果上传到 GitHub Code Scanning，并在出现高危问题时让流水线失败。
+
+> 🔐 快照文件应提交到仓库（DNS TXT 记录本身是公开信息）；**不要**把私钥、API Token 放进快照。
+
+```yaml
+name: Mail domain authentication audit
+
+on:
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"   # 每周一 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write   # 上传 SARIF 需要
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装 MailProof（零运行时依赖）
+        run: python -m pip install mailproof
+
+      - name: 生成 SARIF 报告
+        run: |
+          mailproof audit dns/records.json \
+            --baseline microsoft-2025 \
+            --format sarif \
+            --output mailproof.sarif
+
+      - name: CI 门禁（高危及以上直接失败）
+        run: |
+          mailproof audit dns/records.json \
+            --baseline microsoft-2025 \
+            --format markdown \
+            --output mailproof.md \
+            --fail-on high
+
+      - name: 上传报告产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mailproof-report
+          path: |
+            mailproof.sarif
+            mailproof.md
+
+      - name: 上传到 Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: mailproof.sarif
+```
+
+## 📥 生成快照文件
+
+把 `dig` 的输出整理成 MailProof 支持的 JSON：
+
+```bash
+dig +short TXT example.com
+dig +short TXT _dmarc.example.com
+dig +short TXT sel2026._domainkey.example.com
+```
+
+```json
+{
+  "domains": [
+    {
+      "domain": "example.com",
+      "records": [
+        { "name": "example.com", "type": "TXT", "value": "v=spf1 ip4:203.0.113.0/24 -all" },
+        { "name": "_dmarc.example.com", "type": "TXT", "value": "v=DMARC1; p=reject; rua=mailto:dmarc@example.com" },
+        { "name": "sel2026._domainkey.example.com", "type": "TXT", "value": "v=DKIM1; k=rsa; p=..." }
+      ]
+    }
+  ]
+}
+```
+
+也可以用 BIND zone 文本（见 `examples/sample.zone`），MailProof 会自动识别。
+
+## 🧭 策略升级前先推演
+
+```bash
+mailproof simulate dns/records.json --policy reject --format json
+```

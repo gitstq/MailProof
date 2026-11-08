@@ -1,0 +1,7 @@
+; MailProof 合规示例快照 —— 一个达到 A 级的域名配置
+; 用法: mailproof audit examples/sample.zone --baseline strict
+example.com. IN TXT "v=spf1 ip4:203.0.113.0/24 include:_spf.mailprovider.example -all"
+_dmarc.example.com. IN TXT "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; pct=100; rua=mailto:dmarc-report@example.com; fo=1"
+sel2026._domainkey.example.com. IN TXT "v=DKIM1; k=rsa; h=sha256:sha1; s=email; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuIhpkp78J6NkyUO2q+XNr6JqXYrAGqlqWpCQpqk0p8FvA82RxiBaG1T8QiMNUI6qAsIVRLhspd6QfljDimInHLimdSJNhS7HXz+mY5SB891GArr8VxcHV4eoSBN7VVUfnvTPxDr0W0RxCNgFfdwyZuX6k8W0w8pJG1yX51pvRmeE2zoQcSN7W6Lc0WmaPZ9kLVFvQJbkFdJV+od7ldkmNzUi/c1ac6JV3hRlWMswabfXXKWIlrHMo8zfPFsDxwO8w0ukDnd+ynn3ikzi6qCHvFhSgsRv74Um+BFNWVEBGt8t0S/xBUYc8iBLLCuRvH2fSgvrGXEnWol11piWBqFEIQIDAQAB"
+_mta-sts.example.com. IN TXT "v=STSv1; id=20261109001"
+_smtp._tls.example.com. IN TXT "v=TLSRPTv1; rua=mailto:tlsrpt@example.com"

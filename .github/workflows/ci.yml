@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.8", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: 运行单元测试（零依赖）
+        run: python -m unittest discover -s tests -v
+
+      - name: 自检：审计示例快照
+        run: python -m mailproof audit examples/sample.zone --baseline strict --format json
+
+      - name: 自检：全部报告格式可渲染
+        shell: bash
+        run: |
+          for f in text markdown json sarif html; do
+            python -m mailproof audit examples/sample.zone --format "$f" --quiet > "out.$f"
+            test -s "out.$f"
+          done
+
+      - name: 自检：策略推演
+        run: python -m mailproof simulate examples/sample.zone --policy reject
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 一键构建 wheel + SHA256
+        run: python scripts/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailproof-dist
+          path: dist/
